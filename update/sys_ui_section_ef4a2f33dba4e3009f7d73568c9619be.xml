@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_ui_section caption="" section_id="ef4a2f33dba4e3009f7d73568c9619be" sys_domain="global" table="x_snc_gos_script_token" version="3" view="">
+        <sys_ui_annotation action="INSERT_OR_UPDATE">
+            <is_plain_text>false</is_plain_text>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>060a25e9dbbca7009f7d73568c96194f</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <text>This script is executed when the authorization code is received by the instance. At that time the application will send a request to the token service. This script is used to dynamically change the request by assigning values to the variables declared in the properties object.&lt;br /&gt;&#13;
+&lt;br /&gt;&#13;
+&lt;pre&gt;&#13;
+/*&#13;
+* @param current    {Object} Read from the current OAuth Properties GlideRecord&#13;
+* @param request    {Object} Read Name-Value pairs from the query string of the request URI&#13;
+* @param properties {Object} Set the variable substitutions&#13;
+* @param debug      {Object} write to the log&#13;
+*/&#13;
+(function tokenAPI(current, request, properties, debug) {&#13;
+	// E.g.&#13;
+	// properties.redirect_uri = 'https://' + gs.getProperty('instance_name') + '.service-now.com/navpage.do';&#13;
+	// properties.client_id = current.getValue('client_id');&#13;
+	// var authorizationCode = request.code;&#13;
+	// debug.log('My variable substitution = ' + properties.redirect_uri);&#13;
+})(current, request, properties, debug);&#13;
+&lt;/pre&gt;</text>
+            <type display_value="Section Details">19756e5ec3313000bac1addbdfba8f18</type>
+        </sys_ui_annotation>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>060a25e9dbbca7009f7d73568c96194f</element>
+            <position>0</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>c60a25e9dbbca7009f7d73568c96194f</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_snc_gos_script_token" sys_domain="global" view="Default view">ef4a2f33dba4e3009f7d73568c9619be</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <sys_user/>
+            <type>annotation</type>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>name</element>
+            <position>1</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>4a0a25e9dbbca7009f7d73568c96194f</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_snc_gos_script_token" sys_domain="global" view="Default view">ef4a2f33dba4e3009f7d73568c9619be</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>.begin_split</element>
+            <position>2</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>ca0a25e9dbbca7009f7d73568c96194f</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_snc_gos_script_token" sys_domain="global" view="Default view">ef4a2f33dba4e3009f7d73568c9619be</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <sys_user/>
+            <type>.begin_split</type>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>active</element>
+            <position>3</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>4e0a25e9dbbca7009f7d73568c96194f</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_snc_gos_script_token" sys_domain="global" view="Default view">ef4a2f33dba4e3009f7d73568c9619be</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>.split</element>
+            <position>4</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>ce0a25e9dbbca7009f7d73568c96194f</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_snc_gos_script_token" sys_domain="global" view="Default view">ef4a2f33dba4e3009f7d73568c9619be</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <sys_user/>
+            <type>.split</type>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>order</element>
+            <position>5</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>420a25e9dbbca7009f7d73568c961950</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_snc_gos_script_token" sys_domain="global" view="Default view">ef4a2f33dba4e3009f7d73568c9619be</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>.end_split</element>
+            <position>6</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>c20a25e9dbbca7009f7d73568c961950</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_snc_gos_script_token" sys_domain="global" view="Default view">ef4a2f33dba4e3009f7d73568c9619be</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <sys_user/>
+            <type>.end_split</type>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>script</element>
+            <position>7</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-27 00:57:23</sys_created_on>
+            <sys_id>460a25e9dbbca7009f7d73568c961950</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="NULL" display_value="" name="x_snc_gos_script_token" sys_domain="global" view="Default view">ef4a2f33dba4e3009f7d73568c9619be</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-27 00:57:23</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_section action="INSERT_OR_UPDATE">
+            <caption/>
+            <header>false</header>
+            <name>x_snc_gos_script_token</name>
+            <roles/>
+            <sys_class_name>sys_ui_section</sys_class_name>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-21 23:48:27</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>ef4a2f33dba4e3009f7d73568c9619be</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>x_snc_gos_script_token</sys_name>
+            <sys_overrides/>
+            <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+            <sys_update_name>sys_ui_section_ef4a2f33dba4e3009f7d73568c9619be</sys_update_name>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-21 23:48:27</sys_updated_on>
+            <sys_user/>
+            <title>true</title>
+            <view display_value="Default view" name="NULL">Default view</view>
+            <view_name/>
+        </sys_ui_section>
+    </sys_ui_section>
+</record_update>

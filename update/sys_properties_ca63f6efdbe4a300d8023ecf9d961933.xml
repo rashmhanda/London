@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description>The body for the token request.</description>
+        <ignore_cache>false</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_snc_gos.access.token.request</name>
+        <read_roles/>
+        <suffix>access.token.request</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-21 01:10:12</sys_created_on>
+        <sys_id>ca63f6efdbe4a300d8023ecf9d961933</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>x_snc_gos.access.token.request</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_properties_ca63f6efdbe4a300d8023ecf9d961933</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-21 04:49:29</sys_updated_on>
+        <type>string</type>
+        <value>grant_type=${grant_type}&amp;client_id=${client_id}&amp;code=${code}&amp;redirect_uri=${redirect_uri}&amp;resource=${resource}&amp;client_secret=${client_secret}</value>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=ca63f6efdbe4a300d8023ecf9d961933"/>
+</record_update>

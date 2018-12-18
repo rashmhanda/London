@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_app_module">
+    <sys_app_module action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <application display_value="Integration - General OAuth SSO">472831a1dbe02b009f7d73568c9619cc</application>
+        <assessment/>
+        <content_page/>
+        <device_type/>
+        <filter table="x_snc_gos_log">sys_created_onONToday@javascript:gs.beginningOfToday()@javascript:gs.endOfToday()^EQ<item endquery="false" field="sys_created_on" goto="false" newquery="false" operator="ON" or="false" value="Today@javascript:gs.beginningOfToday()@javascript:gs.endOfToday()"/>
+            <item endquery="true" field="" goto="false" newquery="false" operator="=" or="false" value=""/>
+        </filter>
+        <hint/>
+        <homepage/>
+        <image/>
+        <link_type>LIST</link_type>
+        <map_page/>
+        <mobile_title>Logs</mobile_title>
+        <mobile_view_name>Mobile</mobile_view_name>
+        <name>x_snc_gos_log</name>
+        <order>1200</order>
+        <override_menu_roles>false</override_menu_roles>
+        <query/>
+        <report/>
+        <roles>general_oauth_sso</roles>
+        <sys_class_name>sys_app_module</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-14 16:07:42</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>cebd7d65dbe02b009f7d73568c96195a</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>Logs</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_app_module_cebd7d65dbe02b009f7d73568c96195a</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-21 04:09:55</sys_updated_on>
+        <timeline_page/>
+        <title>Logs</title>
+        <uncancelable>false</uncancelable>
+        <view_name/>
+        <window_name/>
+    </sys_app_module>
+</record_update>

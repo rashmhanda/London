@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+    <element extends="x_snc_gos_script" label="Token Response API" max_length="40" name="x_snc_gos_token_response_api" type="collection"/>
+</database>

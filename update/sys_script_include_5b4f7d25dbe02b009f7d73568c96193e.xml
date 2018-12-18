@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_snc_gos.Base</api_name>
+        <client_callable>false</client_callable>
+        <description>Application base class.</description>
+        <name>Base</name>
+        <script><![CDATA[var Base = Class.create(  );
+Base.prototype = {
+    initialize: function (  ) {
+		
+		this.debug      = null;
+		this.record     = null;
+		this.login      = null;
+		this.scratchpad = null;
+		
+		if ( arguments != null ) {
+			var args = arguments[0];
+			if ( !gs.nil(args) && typeof args == 'object' ) {
+				for ( var name in args ) {
+					if ( args.hasOwnProperty(name) && this.hasOwnProperty(name) ) {
+						this[name] = args[name];
+					}
+				}
+			}
+		}
+    },
+	
+	getLogin : function () {
+		return this.login;
+	},
+	
+	getRecord : function (  ) {
+		return this.record;
+	},
+	
+	setRecord : function (record) {
+		this.record = record;
+	},
+	
+	getDebug : function (  ) {
+		if ( this.debug === null ) {
+			this.debug = new Debug(this.type);
+		}
+		return this.debug;
+	},
+	
+	setDebug : function (debug) {
+		this.debug = debug;
+	},
+	
+	getScratchpad : function (  ) {
+		if ( this.scratchpad === null ) {
+			this.scratchpad = {  };
+		}
+		return this.scratchpad;
+	},
+
+    type: 'Base'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-14 16:15:44</sys_created_on>
+        <sys_id>5b4f7d25dbe02b009f7d73568c96193e</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>Base</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_script_include_5b4f7d25dbe02b009f7d73568c96193e</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-28 00:07:21</sys_updated_on>
+    </sys_script_include>
+</record_update>

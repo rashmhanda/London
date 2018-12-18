@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_snc_gos.Properties</api_name>
+        <client_callable>false</client_callable>
+        <description>Collect a list of all variables found in the template and dot-walk the record, or run scripts to get the values for the variables.</description>
+        <name>Properties</name>
+        <script><![CDATA[/**
+* Collect a list of all variables found in the template and dot-walk the
+* record, or run scripts to get the values for the variables.
+*
+* @author SERVICE-NOW.COM\walter.brame
+*/
+var Properties = Class.create(  );
+Properties.prototype = Object.extendsObject( Base, {
+    initialize: function (  ) {
+		
+		this.template   = null;
+		this.properties = null;
+		this.variables  = null;
+		this.script     = null;
+		
+		Base.prototype.initialize.apply(this, arguments);
+    },
+	
+	getTemplate : function (  ) {
+		return this.template;
+	},
+	
+	setTemplate : function (template) {
+		this.template = template;
+	},
+	
+	_getProperties : function (  ) {
+		if ( this.properties === null ) {
+			this.properties = {  };
+		}
+		return this.properties;
+	},
+	
+	getProperties : function () {
+		if ( this.properties === null ) {
+			if ( this.getVariables(  ) != null && this.getVariables(  ).length != 0 ) {
+				
+				for ( var i = 0; i < this.getVariables(  ).length; i += 1  ) {
+					var variable = this.getVariables(  )[i];
+					var name = variable.substring(2, variable.length - 1 );
+					
+					// Populate the properties with the names of variables
+					this._getProperties(  )[name] = '';
+					
+					// Get values from fields in the record
+					this._updateFromField(name);
+				}
+				
+				// Get values from script
+				this._updateFromScript(  );
+
+			} else {
+				this.debug.log('No variables found');
+			}
+		}
+		return this.properties;
+	},
+	
+	setProperties : function (properties) {
+		this.properties = properties;
+	},
+	
+	getVariables : function (  ) {
+		if ( this.variables === null ) {
+			this.getDebug(  ).log('getVariables');
+			if ( this.getTemplate(  ) != null ) {
+				var variables = this.getTemplate(  ).match(/\${(.*?)}/gi);
+				if ( variables != null ) {
+					this.variables = variables;
+					this.getDebug(  ).log('variables = ' + this.variables);
+				}
+			}
+		}
+		return this.variables;
+	},
+	
+	setVariables : function (variables) {
+		this.variables = variables;
+	},
+	
+	_getValue : function (name) {
+		var ret = '';
+		if ( !gs.nil(name) ) {
+			if ( name.indexOf('.') != -1 ) {
+				ret = this._getDotWalkValue(this.getRecord(  ), name);
+			} else {
+				if ( this.getRecord(  ).isValidField(name) ) {
+					if ( !this.getRecord(  )[name].nil(  ) ) {
+						ret = this.getRecord(  )[name].getDisplayValue(  ) + '';
+					}
+				} else {
+					this.getDebug(  ).log('WARNING: "' + name + '" is not a valid field');
+				}
+			}
+		}
+		return ret;
+	},
+	
+	/**
+	 * 
+	 * Returns a value from a dot notation object Reference.
+	 * 
+	 * @param obj {Object GlideRecord}
+	 *                    E.g. incident
+	 * @param str {String} 
+	 *                    dot notation string value
+	 *                    E.g. caller_id.name
+	 *
+	 * @returns   {String} 
+	 *                    that is the final value from the reference
+	 */
+	_getDotWalkValue : function(obj, str) {
+		var refs = str.split('.');
+		for (var x = 0; x < refs.length; x++) {
+			try {
+				if (obj[refs[x]] != null && obj[refs[x]] != undefined)
+					obj = obj[refs[x]];
+				else
+					throw 'WARNING: "' + refs[x] + '" is not a valid field in path "' + str + '"';
+			} catch (e) {
+				this.getDebug(  ).log(e);
+				obj = null;
+				break;
+			}
+		}
+
+		return obj;
+	},
+	
+	_updateFromField : function (name) {
+		if ( !gs.nil(name) ) {
+			try {
+				var value = this._getValue(name);
+				if ( !gs.nil(value) ) {
+					this._getProperties(  )[name] = value + '';
+					this.getDebug(  ).log('Obtained value from field: ' + name + ' = ' + value);
+				}
+			} catch (e) {
+				this.getDebug(  ).log(e);
+			}
+		}
+	},
+	
+	getScript : function (  ) {
+		if ( this.script === null ) {
+			this.script = new Script(  );
+		}
+		return this.script;
+	},
+	
+	setScript : function (script) {
+		this.script = script;
+	},
+	
+	_updateFromScript : function (  ) {
+		if ( !gs.nil(this.getScript(  )) ) {			
+			if ( !gs.nil(this.getScript(  ).getTable(  )) && !gs.nil(this.getScript(  ).getQuery(  )) ) {
+				this.getScript(  ).addArgument('properties', this._getProperties(  ));
+				this.getScript(  ).runScripts(  );
+				this.getDebug(  ).log(this.getScript(  ).getDebug(  ).getMessages(  ));
+			}
+		}
+	},
+
+    type: 'Properties'
+} );]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-24 18:24:19</sys_created_on>
+        <sys_id>7c5935f8db3467009f7d73568c9619f9</sys_id>
+        <sys_mod_count>14</sys_mod_count>
+        <sys_name>Properties</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_script_include_7c5935f8db3467009f7d73568c9619f9</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-25 20:33:23</sys_updated_on>
+    </sys_script_include>
+</record_update>

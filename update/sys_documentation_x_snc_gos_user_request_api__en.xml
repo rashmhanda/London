@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_documentation element="" label="User Request API" language="en" table="x_snc_gos_user_request_api">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element/>
+            <help/>
+            <hint/>
+            <label>User Request API</label>
+            <language>en</language>
+            <name>x_snc_gos_user_request_api</name>
+            <plural>User Request APIs</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-28 00:42:55</sys_created_on>
+            <sys_id>7b407231dbb8e7009f7d73568c9619be</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>User Request API</sys_name>
+            <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+            <sys_update_name>sys_documentation_x_snc_gos_user_request_api__en</sys_update_name>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-28 00:42:55</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>

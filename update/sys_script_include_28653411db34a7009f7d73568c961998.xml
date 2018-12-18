@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_snc_gos.OriginalRequestURL</api_name>
+        <client_callable>false</client_callable>
+        <description>Generate proper RelayState parameter value. This should mostly preserve original user request URL so that we can land on the right page after authentication. This is taken from SAML2_update1.generateRelayState()</description>
+        <name>OriginalRequestURL</name>
+        <script><![CDATA[/*
+ * Generate proper RelayState parameter value.
+ * This should mostly preserve original user request URL so that we can land on
+ * the right page after authentication.
+ *
+ * This is taken from SAML2_update1.generateRelayState()
+ *
+ */
+var OriginalRequestURL = Class.create();
+OriginalRequestURL.prototype = {
+	initialize: function() {
+		this.serviceUrl = 'https://' + gs.getProperty('instance_name') + '.service-now.com';
+		this.debug = null;
+	},
+	
+	/*
+ 	* Generate proper RelayState parameter value.
+ 	* This should mostly preserve original user request URL so that we can land on
+ 	* the right page after authentication.
+ 	*/
+	generateRelayState : function(request, isTestConn) {		
+		var relayState = this.serviceUrl;
+		
+		// Set up base url
+		var urlTokens = /^(http(s?)\:\/\/.*)\/\S+$/(this.serviceUrl);
+		var baseUrl = this.serviceUrl;
+		if (urlTokens && urlTokens.length > 1)
+			baseUrl = urlTokens[1];
+		this.getDebug(  ).log("Stripping down the serviceURL: " + this.serviceUrl + " to a base URL of: " + baseUrl);
+		
+		/*
+		if (isTestConn) {
+			var relayState = this.serviceUrl + SNC.SSOUtils.RELAYSTATESEPARATOR() +
+			"sysparm_saml_tc=true&glide_sso_id=" + this.propertiesGR.getUniqueValue() +
+			"&exit_name=MultiSSO";
+			this.getDebug(  ).log("Generating a Test Connection Relay State of: " + relayState);
+			return relayState;
+		}
+ 		*/
+		
+		/**
+ 		* grab the request URI and query string from the request if start page is nil.
+ 		* we don't want to go back to the landing page. Must fix the URI here as the value
+ 		* was encoded in GlideServletUITransaction.
+ 		*/
+		var glideSession = gs.getSession();
+		var loginRedirectURL = glideSession.getProperty("login_redirect_url");
+		glideSession.clearProperty("login_redirect_url");
+		this.getDebug(  ).log("loginRedirectURL: " + loginRedirectURL);
+		var origStartPage = glideSession.getProperty("starting_page");
+		this.getDebug(  ).log("original starting_page: " + origStartPage);
+		var startPage = gs.nil(loginRedirectURL) ? this.fixURLEncode(origStartPage) : this.fixURLEncode(loginRedirectURL);
+		var requestURI = gs.nil(startPage) ? request.getRequestURI() : startPage;
+		this.getDebug(  ).log("requestURI: " + requestURI);
+		
+		// if it has start page, we should just use it
+		var qs = gs.nil(startPage) ? request.getQueryString() : "";
+		this.getDebug(  ).log("Query String (qs): " + qs);
+		
+		if (!requestURI ||requestURI.equals("") || requestURI.equals("/") || requestURI.indexOf("login_with_sso")>=0) {
+			// No deep linking
+			this.getDebug(  ).log("No Deep Linking for this request");
+			//relayState = this.serviceUrl;
+		} else if (this.needNavFrame(requestURI, request)) {
+			this.getDebug(  ).log("There may be Deep Linking involved with this request");
+			//use saml_redirector to make sure we bust out of the current frame before loading another NavFrame.
+			if (qs && !qs.equals(""))
+				requestURI = requestURI + '?' + qs;
+			
+			this.getDebug(  ).log("RequestURI :" +  requestURI);
+			relayState = baseUrl + "/saml_redirector.do?sysparm_nostack=true&sysparm_uri="+ encodeURIComponent("/nav_to.do?uri=" + encodeURIComponent(requestURI));
+		} else {
+			if (requestURI && !requestURI.startsWith('/')) {
+				requestURI = '/' + requestURI;
+				this.getDebug(  ).log("requestURI: " + requestURI);
+			}
+			relayState = baseUrl + requestURI;
+			if (qs && !qs.equals(""))
+				relayState = relayState + '?' + qs;
+		}
+		
+		this.getDebug(  ).log("Generating a Relay State of: " + relayState);
+		this.getDebug().write();
+		return relayState;
+	},
+	
+	/*
+ 	* Determine if we need to bust frame and add "nav_to.do" in front of the user request URI.
+ 	*/
+	needNavFrame : function(requestURI, request) {
+		
+		if (requestURI.indexOf("login_with_sso")>=0)
+			return false;
+		
+		// request already loading NavFrame.
+		if(requestURI.startsWith("/nav_to.do"))
+			return false;
+		
+		// this request should only come from top window.
+		if(requestURI.startsWith("/navpage.do"))
+			return false;
+		
+		// already bustin frames.
+		if(requestURI.startsWith("/saml_redirector.do"))
+			return false;
+		
+		if(this.isCMSRequest(request))
+			return false;
+		
+		if(this.isSPRequest())
+			return false;
+		
+		if(requestURI.equals("") || requestURI.equals("/"))
+			return false;
+		
+		return true;
+	},
+	
+	isCMSRequest : function(request) {
+		var cmsSiteName = request.getSiteName();
+		this.getDebug(  ).log("CMS site name: " + cmsSiteName);
+		if(cmsSiteName && !cmsSiteName.equals(""))
+			return true;
+		
+		return false;
+	},
+	
+	isSPRequest : function() {
+		var isDirectRedirect = gs.getSession().getProperty("is_direct_redirect");
+		this.getDebug(  ).log("Is this a request to access a service portal ?  -  " + isDirectRedirect);
+		if(isDirectRedirect != null && isDirectRedirect == "true")
+			return true;
+		
+		return false;
+	},
+	
+	fixURLEncode: function(url) {
+		if (url) {
+			/*
+			var javaStr = new Packages.java.lang.String(url);
+			return javaStr.replaceAll("%26", "&");
+ 			*/
+			return url.replace(/%26/g, '&');
+		}
+		return null;
+	},
+	
+	getDebug : function (  ) {
+		if ( this.debug === null ) {
+			this.debug = new Debug(this.type);
+		}
+		return this.debug;
+	},
+	
+	type: 'OriginalRequestURL'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-26 02:29:46</sys_created_on>
+        <sys_id>28653411db34a7009f7d73568c961998</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>OriginalRequestURL</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_script_include_28653411db34a7009f7d73568c961998</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-26 02:52:38</sys_updated_on>
+    </sys_script_include>
+</record_update>

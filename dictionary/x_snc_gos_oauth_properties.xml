@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+    <element extends="sso_properties" label="OAuth Properties" max_length="40" name="x_snc_gos_oauth_properties" type="collection">
+        <element label="Authorization Variables API" max_length="32" name="authorization_script" reference="x_snc_gos_script_authorization" type="reference"/>
+        <element attributes="edge_encryption_enabled=true" label="Authorize Endpoint" max_length="1000" name="authorize_endpoint" type="string"/>
+        <element label="Authorize Endpoint Parameters" max_length="4000" name="authorize_endpoint_parameters" type="simple_name_values"/>
+        <element attributes="edge_encryption_enabled=true" label="Client ID" max_length="100" name="client_id" type="string"/>
+        <element attributes="edge_encryption_enabled=true" label="Client Secret" max_length="255" name="client_secret" type="password2"/>
+        <element default="/*&#13;&#10;* @param current   {Object} This current OAuth Properties GlideRecord&#13;&#10;* @param request   {Object} The HTTP request received by this instance&#13;&#10;* @param variables {Object} The variable substitutions&#13;&#10;*/&#13;&#10;function tokenAPI(current, request, variables) {&#13;&#10;&#9;// E.g.&#13;&#10;&#9;// variables.redirect_uri = 'https://' + gs.getProperty('instance_name') &#13;&#10;&#9;// + '.service-now.com/navpage.do';&#13;&#10;&#9;// variables.client_id = current.getValue('client_id');&#13;&#10;&#9;// var requestParam = request.getParameter('parameter_name');&#13;&#10;}" label="Token API Script" max_length="4000" name="token_api_script" type="script"/>
+        <element label="Token Body Parameters" max_length="4000" name="token_body_parameters" type="simple_name_values"/>
+        <element attributes="edge_encryption_enabled=true" label="Token Endpoint" max_length="1000" name="token_endpoint" type="string"/>
+        <element label="Token Endpoint Parameters" max_length="4000" name="token_endpoint_parameters" type="simple_name_values"/>
+        <element label="Token Variables API" max_length="32" name="token_script" reference="x_snc_gos_script_token" type="reference"/>
+        <element label="Body Parameters" max_length="4000" name="user_body_parameters" type="simple_name_values"/>
+        <element attributes="edge_encryption_enabled=true" label="Endpoint" max_length="1000" name="user_endpoint" type="string"/>
+        <element label="Endpoint Parameters" max_length="4000" name="user_endpoint_parameters" type="simple_name_values"/>
+        <element label="Headers" max_length="4000" name="user_headers" type="simple_name_values"/>
+        <element attributes="edge_encryption_enabled=true" choice="1" label="Method" mandatory="true" max_length="40" name="user_method" type="string">
+            <choice>
+                <element label="GET" sequence="0" value="GET"/>
+                <element label="POST" sequence="1" value="POST"/>
+            </choice>
+        </element>
+        <element attributes="edge_encryption_enabled=true" hint="Property in response to parse for value to match against local field" label="Response Property" max_length="100" name="user_response_property" type="string"/>
+        <element label="User Variables API" max_length="32" name="user_script" reference="x_snc_gos_script_user" type="reference"/>
+        <index name="index">
+            <element name="authorization_script"/>
+        </index>
+        <index name="index2">
+            <element name="token_script"/>
+        </index>
+        <index name="index3">
+            <element name="user_script"/>
+        </index>
+    </element>
+</database>

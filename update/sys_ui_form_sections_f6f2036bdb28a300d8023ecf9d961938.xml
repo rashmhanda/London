@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_ui_form_sections form_id="f6f2036bdb28a300d8023ecf9d961938" sys_domain="global" table="customer_contact" version="3">
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>0</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-21 02:18:09</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>3af203ebdb28a300d8023ecf9d961978</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="customer_contact" name="customer_contact" sys_domain="global" view="d7c7e323dba02b0054ac89584b96196e">f6f2036bdb28a300d8023ecf9d961938</sys_ui_form>
+            <sys_ui_section display_value="">b6f203ebdb28a300d8023ecf9d961976</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-21 02:18:09</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>1</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-21 02:18:09</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>b2f203ebdb28a300d8023ecf9d961976</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="customer_contact" name="customer_contact" sys_domain="global" view="d7c7e323dba02b0054ac89584b96196e">f6f2036bdb28a300d8023ecf9d961938</sys_ui_form>
+            <sys_ui_section display_value="">7af203ebdb28a300d8023ecf9d961974</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-21 02:18:09</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>2</position>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-21 02:18:09</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>bef2036bdb28a300d8023ecf9d96193d</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="customer_contact" name="customer_contact" sys_domain="global" view="d7c7e323dba02b0054ac89584b96196e">f6f2036bdb28a300d8023ecf9d961938</sys_ui_form>
+            <sys_ui_section display_value="">faf2036bdb28a300d8023ecf9d96193a</sys_ui_section>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-21 02:18:09</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form action="INSERT_OR_UPDATE">
+            <name>customer_contact</name>
+            <roles/>
+            <sys_class_name>sys_ui_form</sys_class_name>
+            <sys_created_by>walter.brame</sys_created_by>
+            <sys_created_on>2018-09-21 02:18:09</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>f6f2036bdb28a300d8023ecf9d961938</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>customer_contact</sys_name>
+            <sys_overrides/>
+            <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+            <sys_update_name>sys_ui_form_sections_f6f2036bdb28a300d8023ecf9d961938</sys_update_name>
+            <sys_updated_by>walter.brame</sys_updated_by>
+            <sys_updated_on>2018-09-21 02:18:09</sys_updated_on>
+            <sys_user/>
+            <view display_value="Human Resources" name="human_resources">d7c7e323dba02b0054ac89584b96196e</view>
+            <view_name/>
+        </sys_ui_form>
+    </sys_ui_form_sections>
+</record_update>

@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_snc_gos.Login</api_name>
+        <client_callable>false</client_callable>
+        <description>General OAuth SSO Utility</description>
+        <name>Login</name>
+        <script><![CDATA[/**
+ * General OAuth Login Loginity
+ *
+ * @author SERVICE-NOW.COM\walter.brame
+ */
+var Login = Class.create();
+Login.AUTHORIZE_ENDPOINT        = 'authorize_endpoint';
+Login.AUTHORIZE_ENDPOINT_PARAMS = 'authorize_endpoint_parameters';
+Login.TOKEN_ENDPOINT            = 'token_endpoint';
+Login.TOKEN_ENDPOINT_PARAMS     = 'token_endpoint_parameters';
+Login.TOKEN_BODY_PARAMS         = 'token_body_parameters';
+Login.USER_ENDPOINT             = 'user_endpoint';
+Login.USER_ENDPOINT_PARAMS      = 'user_endpoint_parameters';
+Login.USER_HEADERS              = 'user_headers';
+Login.USER_BODY_PARAMS          = 'user_body_parameters';
+Login.USER_FIELD                = 'user_field';
+Login.USER_RESPONSE_PROPERTY    = 'user_response_property';
+Login.prototype = Object.extendsObject(Base, {
+	initialize : function () {
+		Base.prototype.initialize.apply(this, arguments);
+		this.idp                     = null;
+		this.api                     = null;
+		this.code                    = null;
+		this.state                   = null;
+		this.request                 = null;
+		this.requestQueryString      = null;
+		this.clientId                = null;
+		this.clientSecret            = null;
+		this.deepLink                = null;
+		this.sessionId               = null;
+		this.generatedDeepLink       = null;
+		this.generatedSessionId      = null;		
+		this.authorizationURL        = null;
+		this.authorizationEndpoint   = null;
+		this.authorizationParameters = null;		
+		this.token                   = null;
+		this.tokenURL                = null;
+		this.tokenEndpoint           = null;
+		this.tokenRequestBody        = null;
+		this.tokenEndpointParameters = null;
+		this.tokenRequestInstance    = null;
+		this.userURL                 = null;
+		this.userMethod              = null;
+		this.userHeaders             = null;
+		this.userEndpoint            = null;
+		this.userRequestBody         = null;
+		this.userEndpointParameters  = null;
+		this.userField               = null;
+		this.userResponseProperty    = null;
+		this.userResponse            = null;
+		this.userName                = null;
+	},
+	
+	getRequest : function (  ) {
+		if ( this.request === null ) {
+			this.request = {  };
+			if ( this._getRequestQueryString(  ) != null ) {
+				var queryList = this._getRequestQueryString(  ).split('&');
+				if ( !gs.nil(queryList) && queryList.length != 0 ) {
+					this.getDebug(  ).log('Build request');
+					for ( var i = 0; i < queryList.length; i += 1 ) {
+						var param = queryList[i];
+						if ( !gs.nil(param) && param.indexOf('=') != -1) {
+							param = param.split('=');
+							var name = param[0];
+							var value = param[1];
+							this.request[name] = value;
+							this.getDebug(  ).log(name + ' = ' + value);
+						}
+					}
+				}
+			}
+		}
+		return this.request;
+	},
+	
+	_getRequestQueryString : function (  ) {
+		return this.requestQueryString;
+	},
+	
+	setRequestQueryString : function (requestQueryString) {
+		this.requestQueryString = requestQueryString;
+	},
+	
+	_getCode : function (  ) {
+		return this.code;
+	},
+	
+	setCode : function (code) {
+		this.code = code;
+	},
+	
+	_getClientId : function (  ) {
+		if ( this.clientId === null ) {
+			if ( this.getIDP(  ) != null ) {
+				if ( !this.getIDP(  ).client_id.nil(  ) ) {
+					this.clientId = this.getIDP(  ).getValue('client_id');
+					this.getDebug(  ).log('Client Id = ' + this.clientId);
+				} else {
+					throw 'Missing Client Id';
+				}
+			}
+		}
+		return this.clientId;
+	},
+	
+	_getClientSecret : function (  ) {
+		if ( this.clientSecret === null ) {
+			if ( this.getIDP(  ) != null ) {
+				if ( !this.getIDP(  ).client_secret.nil(  ) ) {
+					// this.clientSecret = this.getIDP(  ).getValue('client_secret');
+					this.clientSecret = this.getIDP(  ).client_secret.getDecryptedValue();
+					this.getDebug(  ).log('Client Secret = ' + this.clientSecret);
+				} else {
+					throw 'Missing Client Secret';
+				}
+			}
+		}
+		return this.clientSecret;
+	},
+	
+	getGeneratedSessionId : function (  ) {
+		if ( this.generatedSessionId === null ) {
+			this.generatedSessionId = gs.generateGUID(  );
+			this.getDebug(  ).log('Generated Session Id = ' + this.generatedSessionId);
+		}
+		return this.generatedSessionId;
+	},
+	
+	_getGeneratedDeepLink : function (  ) {
+		return this.generatedDeepLink;
+	},
+	
+	setGeneratedDeepLink : function (generatedDeepLink) {
+		this.generatedDeepLink = generatedDeepLink;
+	},
+	
+	_getGeneratedState : function (  ) {
+		return gs.base64Encode(JSON.stringify({
+			session_id : this.getGeneratedSessionId(  ),
+			deep_link  : this._getGeneratedDeepLink(  )
+		}));
+	},
+	
+	_getState : function (  ) {
+		return this.state;
+	},
+	
+	setState : function (encodedState) {
+		if ( !gs.nil(encodedState) ) {
+			var decodedState = gs.base64Decode(encodedState);
+			this.getDebug(  ).log('Returning state: ' + decodedState);
+			this.state = JSON.parse(decodedState);
+		}
+	},
+	
+	getDeepLink : function (  ) {		
+		if ( this.deepLink === null ) {
+			this.getDebug(  ).log('getDeepLink');
+			if ( this._getState(  ) != null ) {
+				if ( !gs.nil(this._getState(  ).deep_link) ) {
+					this.deepLink = this._getState(  ).deep_link;
+					this.getDebug(  ).log('Deep link = ' + this.deepLink);
+				} else {
+					this.getDebug(  ).log('No deep link in state');
+				}
+			} else {
+				this.getDebug(  ).log('No state in request URI');
+			}
+		}		
+		return this.deepLink;
+	},
+	
+	_getSessionId : function (  ) {
+		if ( this.sessionId === null ) {
+			if ( this._getState(  ) != null ) {
+				if ( !gs.nil(this._getState(  ).session_id) ) {
+					this.sessionId = this._getState(  ).session_id;
+				}
+			}
+		}
+		return this.sessionId;
+	},
+	
+	isValidSessionId : function (sessionId) {
+		var ret = false;
+		this.getDebug(  ).log('Validate Session Id');
+		this.getDebug(  ).log('Saved session id = ' + sessionId);
+		this.getDebug(  ).log('Returning session id = ' + this._getSessionId(  ));
+		if ( this._getSessionId(  ) ==  sessionId ) {
+			ret = true;
+		} else {
+			this.getDebug(  ).log('Invalid Session Id');
+		}
+		return ret;
+	},
+	
+	getAuthorizationURL : function (  ) {
+		if ( this.authorizationURL === null ) {
+			this.getDebug(  ).log('getAuthorizationURL');	
+			try {
+				if ( this.getIDP(  ) != null ) {
+					var endpoint = this._getAuthorizationEndpoint(  );
+					var endpointParameters = this._getAuthorizationParameters(  );
+					if ( endpoint != null ) {
+						this.authorizationURL = this._getURL(endpoint, endpointParameters);
+						this.authorizationURL += '&state=' + this._getGeneratedState(  );
+						this.getDebug(  ).log('Authorization Redirect = ' + this.authorizationURL);
+					} else {
+							this.getDebug(  ).log('Failed to get Authorization Redirect');
+					}				
+				}
+			} catch (e) {
+				this.getDebug(  ).log('getAuthorizationURL.Exception:' + e);
+			} finally {
+				this.getDebug(  ).write(  );
+			}
+		}
+		return this.authorizationURL;
+	},
+	
+	_getAuthorizationEndpoint : function () {
+		if ( this.authorizationEndpoint === null ) {
+			this.getDebug(  ).log('getAuthorizationEndpoint');			
+			if ( !this.getIDP(  )[Login.AUTHORIZE_ENDPOINT].nil(  ) ) {
+				this.authorizationEndpoint = this._getAutorizationValue(Login.AUTHORIZE_ENDPOINT);
+				this.getDebug(  ).log('Authorization Endpoint = ' + this.authorizationEndpoint);
+			} else {
+				throw 'Missing Authorization Endpoint';
+			}
+		}
+		return this.authorizationEndpoint;
+	},
+	
+	_getAuthorizationParameters : function () {
+		if ( this.authorizationParameters === null ) {
+			this.getDebug(  ).log('getAuthorizationParameters');			
+			if ( !this.getIDP(  )[Login.AUTHORIZE_ENDPOINT_PARAMS].nil(  ) ) {
+				this.authorizationParameters = this._getAutorizationValue(Login.AUTHORIZE_ENDPOINT_PARAMS);
+				this.getDebug(  ).log('Authorization Parameters = ' + this.authorizationParameters);
+			}
+		}
+		return this.authorizationParameters;
+	},
+	
+	_getAutorizationValue : function (templateFieldName) {
+		var templateValue = new Util.TemplateValue(  );
+		templateValue.setIDP(this.getIDP(  ));
+		templateValue.setTemplateFieldName(templateFieldName);
+		templateValue.setScriptTableName('x_snc_gos_script_authorization');
+		templateValue.setScriptSysId(this._getValue('authorization_script'));
+		
+		templateValue.setArguments({
+			current : this.getIDP(  ),
+			request : this.getRequest(  )
+		});
+		
+		var readyValue = templateValue.getReadyValue(  );
+		this.getDebug(  ).log(templateValue.getDebug(  ).getMessages(  ));
+		if ( gs.nil(readyValue) ) {
+			throw 'Failed to get value for ' + templateFieldName;
+		}
+		
+		return readyValue;
+	},
+	
+	getTokenRequestInstance : function (  ) {
+		if ( this.tokenRequestInstance === null ) {
+			this.tokenRequestInstance = new sn_ws.RESTMessageV2(  );
+		}
+		return this.tokenRequestInstance;
+	},
+	
+	_getToken : function (  ) {
+		if ( this.token === null ) {
+			this.getDebug(  ).log('getToken');
+			
+			this.getTokenRequestInstance(  ).setEndpoint(this._getTokenURL(  ));
+			this.getTokenRequestInstance(  ).setHttpMethod("POST");
+			this.getTokenRequestInstance(  ).setRequestHeader("Accept", "application/json");
+			this.getTokenRequestInstance(  ).setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			this.getTokenRequestInstance(  ).setBasicAuth(this._getClientId(  ), this._getClientSecret(  ));
+			this.getTokenRequestInstance(  ).setRequestBody(this._getTokenRequestBody(  ));
+			
+			// TODO
+			// You can change anything about the request before it is sent by using an API script
+			//this._getAPI(  ).runTokenRequestAPI(  );
+			
+			var response = this.getTokenRequestInstance(  ).execute(  );
+			
+			var responseBody = response.getBody(  );
+			var httpStatus = response.getStatusCode(  );
+
+			this.getDebug(  ).log("Token HTTP Status = " + httpStatus);
+			this.getDebug(  ).log("Token Response = " + responseBody);
+			var responseObj = JSON.parse(responseBody);
+
+			// TODO: Should this be configurable?
+			var token = responseObj.access_token;
+			
+			if (!gs.nil(token)) {
+				this.token = token;
+			} else {
+				throw 'Failed to parse token from response';
+			}
+		}
+		return this.token;
+	},
+	
+	_getTokenURL : function (  ) {
+		if ( this.tokenURL === null ) {
+			this.getDebug(  ).log('_getTokenURL');	
+			if ( this.getIDP(  ) != null ) {
+				var endpoint = this._getTokenEndpoint(  );
+				var endpointParameters = this._getTokenEndpointParameters(  );
+				if ( endpoint != null ) {
+					this.tokenURL = this._getURL(endpoint, endpointParameters);
+					this.getDebug(  ).log('Token URL = ' + this.tokenURL);
+				} else {
+					throw 'Missing Token URL';
+				}				
+			}
+		}
+		return this.tokenURL;
+	},
+	
+	_getTokenEndpoint : function (  ) {
+		if ( this.tokenEndpoint === null ) {
+			this.getDebug(  ).log('_getTokenEndpoint');			
+			if ( !this.getIDP(  )[Login.TOKEN_ENDPOINT].nil(  ) ) {
+				this.tokenEndpoint = this._getTokenValue(Login.TOKEN_ENDPOINT);
+			} else {
+				throw 'Missing Token Endpoint';
+			}
+		}
+		return this.tokenEndpoint;
+	},
+	
+	_getTokenEndpointParameters : function (  ) {
+		if ( this.tokenEndpointParameters === null ) {
+			this.getDebug(  ).log('_getTokenEndpointParameters');			
+			if ( !this.getIDP(  )[Login.TOKEN_ENDPOINT_PARAMS].nil(  ) ) {
+				this.tokenEndpointParameters = this._getTokenValue(Login.TOKEN_ENDPOINT_PARAMS);
+			}
+		}
+		return this.tokenEndpointParameters;
+	},
+	
+	_getTokenRequestBody : function (  ) {
+		if ( this.tokenRequestBody === null ) {
+			this.getDebug(  ).log('_getTokenRequestBody');		
+			if ( gs.nil(this._getCode(  )) ) {
+				throw 'Missing authorization code';
+			}
+			if ( !this.getIDP(  )[Login.TOKEN_BODY_PARAMS].nil(  ) ) {
+				var jsonStr = this._getTokenValue(Login.TOKEN_BODY_PARAMS);
+				var params = this._getParameters(jsonStr);
+				if ( !gs.nil(params) ) {
+					params += '&code=' + this._getCode(  );
+					this.tokenRequestBody = params;
+				}
+				this.getDebug(  ).log('Token Request Body = ' + this.tokenRequestBody);
+			}
+		}
+		return this.tokenRequestBody;
+	},
+	
+	_getTokenValue : function (templateFieldName) {
+		var templateValue = new Util.TemplateValue(  );
+		templateValue.setIDP(this.getIDP(  ));
+		templateValue.setTemplateFieldName(templateFieldName);
+		templateValue.setScriptTableName('x_snc_gos_script_token');
+		templateValue.setScriptSysId(this._getValue('token_script'));
+		templateValue.setArguments({
+			current : this.getIDP(  ),
+			request : this.getRequest(  )
+		});
+		var readyValue = templateValue.getReadyValue(  );
+		this.getDebug(  ).log(templateValue.getDebug(  ).getMessages(  ));
+		if ( gs.nil(readyValue) ) {
+			throw 'Failed to get value for ' + templateFieldName;
+		}
+		return readyValue;
+	},
+	
+	getIDP : function (  ) {
+		if ( this.idp === null ) {
+			var idp = new GlideRecord('x_snc_gos_oauth_properties');
+			idp.addQuery('active', true);
+			idp.addQuery('default', true);
+			idp.query(  );
+			if ( idp.next(  ) ) {
+				this.idp = idp;
+				this.getDebug(  ).log('Idp = ' + this.idp.getUniqueValue(  ));
+			} else {
+				throw 'Missing IDP';
+			}
+		}
+		return this.idp;
+	},
+	
+	getAPI : function (  ) {
+		if ( this.api === null ) {
+			this.api = new API({
+				login : this
+			});
+		}
+		return this.api;
+	},
+	
+	_getURL : function (endpoint, endpointParameters) {
+		var url = endpoint;		
+		var params = this._getParameters(endpointParameters);
+		if ( params != null ) {
+			url += '?' + params;
+		}
+		return url;
+	},
+	
+	_getParameters : function (jsonStr) {
+		var ret = null;
+		if ( !gs.nil(jsonStr) ) {
+			var jsonObj = JSON.parse(jsonStr);
+			if ( !gs.nil(jsonObj) ) {
+				var params = [  ];
+				for ( var name in jsonObj) {
+					if ( jsonObj.hasOwnProperty(name) ) {
+						var value = jsonObj[name];
+						params.push(name + '=' + value);
+					}
+				}
+				if ( params.length != 0 ) {
+					ret = params.join('&');
+				}
+			}
+		}
+		return ret;
+	},
+	
+	_getValue : function (fieldName) {
+		var ret = null;
+		if ( this.getIDP(  ) != null ) {
+			if ( !this.getIDP(  )[fieldName].nil(  ) ) {
+				ret = this.getIDP(  ).getValue(fieldName)+'';
+			}
+		}
+		return ret;
+	},
+	
+	_getUserResponse : function (  ) {
+		if ( this.userResponse === null ) {
+			
+			var token = this._getToken(  );
+			
+			this.getDebug(  ).log('getUserName');			
+			var request = new sn_ws.RESTMessageV2(  );
+			request.setEndpoint(this._getUserURL(  ));
+			switch (this._getUserMethod(  )+'') {
+				case 'GET' :
+					request.setHttpMethod("GET");
+				break;
+				case 'POST' :
+					request.setHttpMethod("POST");
+					if ( this._getUserHeaders(  ) != null ) {
+						for ( var headerName in this._getUserHeaders(  ) ) {
+							if ( this._getUserHeaders(  ).hasOwnProperty(headerName) ) {
+								var headerValue = this._getUserHeaders(  )[headerName];
+								request.setRequestHeader(headerName, headerValue);
+							}
+						}
+					}
+					if ( this._getUserRequestBody(  ) != null ) {
+						request.setRequestBody(this._getUserRequestBody(  ));
+					}
+				break;
+			}
+
+			request.setRequestHeader("Authorization", "Bearer " + token);
+			var response = request.execute(  );
+			var responseBody = response.getBody(  );
+			var httpStatus = response.getStatusCode(  );
+			
+			this.getDebug(  ).log("User HTTP Status = " + httpStatus);
+			this.getDebug(  ).log("User Response = " + responseBody);
+			this.userResponse = JSON.parse(responseBody);
+		}
+		return this.userResponse;
+	},
+	
+	getUserName : function (  ) {
+		if ( this.userName === null ) {
+			var ret = null;
+			try {
+				if ( this._getUserResponse(  ) != null ) {
+					var userName = Util.getDotWalkValue(this._getUserResponse(  ), this._getUserResponseProperty(  ));
+					
+					var employeeNumber = Util.getDotWalkValue(this._getUserResponse(  ), 'externalId');
+					
+					var emails = Util.getDotWalkValue(this._getUserResponse(  ), 'emails');
+					
+					if (!gs.nil(userName)) {
+						var userFieldName = this._getUserField(  );
+						var user = new GlideRecord('sys_user');
+						var userGR = user.addQuery(userFieldName, userName);
+						// Additional check - externalId agaisnt employee_number
+						if (employeeNumber != null) {
+							userGR.addOrCondition('employee_number',employeeNumber);
+						}
+						// Additional check - hpid emails agaisnt email
+						if (emails) {
+							for (var i=0, tot=emails.length; i < tot; i++) {
+								userGR.addOrCondition('email', emails[i].value);
+							}
+						}
+							
+						user.query(  );
+						if ( user.next(  ) ) {
+							// this.userName = userName;
+							this.userName = user.user_name.toString();
+							this.getDebug(  ).log('Loggin in User: ' + user.getDisplayValue(  ));
+						} else {
+							throw 'No sys_user found for ' + userFieldName + ' = ' + userName;
+						}
+					} 
+				}
+			} catch (e) {
+				this.getDebug(  ).log('getUserName.Exception: ' + e);
+			} finally {
+				this.getDebug(  ).write(  );
+			}
+		}
+		return this.userName;
+	},
+	
+	_getUserField : function (  ) {
+		if ( this.userField === null ) {
+			if ( this.getIDP(  ) != null ) {
+				if ( !this.getIDP(  ).user_field.nil(  ) ) {
+					this.userField = this.getIDP(  ).getValue('user_field');
+					this.getDebug(  ).log('User Field = ' + this.userField);
+				} else {
+					throw 'Missing User Field';
+				}
+			}
+		}
+		return this.userField;
+	},
+	
+	_getUserResponseProperty : function (  ) {
+		if ( this.userResponseProperty === null ) {
+			if ( this.getIDP(  ) != null ) {
+				if ( !this.getIDP(  ).user_response_property.nil(  ) ) {
+					this.userResponseProperty = this.getIDP(  ).getValue('user_response_property');
+					this.getDebug(  ).log('User Response Property = ' + this.userResponseProperty);
+				} else {
+					throw 'Missing User Response Property';
+				}
+			}
+		}
+		return this.userResponseProperty;
+	},
+	
+	_getUserMethod : function (  ) {
+		if ( this.userMethod === null ) {
+			if ( this.getIDP(  ) != null ) {
+				if ( !this.getIDP(  ).user_method.nil(  ) ) {
+					this.userMethod = this.getIDP(  ).getValue('user_method');
+					this.getDebug(  ).log('User Method = ' + this.userMethod);
+				} else {
+					throw 'Missing User Method';
+				}
+			}
+		}
+		return this.userMethod;
+	},
+	
+	_getUserURL : function (  ) {
+		if ( this.userURL === null ) {
+			this.getDebug(  ).log('_getUserURL');	
+			if ( this.getIDP(  ) != null ) {
+				var endpoint = this._getUserEndpoint(  );
+				var endpointParameters = this._getUserEndpointParameters(  );
+				if ( endpoint != null ) {
+					this.userURL = this._getURL(endpoint, endpointParameters);
+					this.getDebug(  ).log('User URL = ' + this.userURL);
+				} else {
+					throw 'Missing User URL';
+				}				
+			}
+		}
+		return this.userURL;
+	},
+	
+	_getUserEndpoint : function (  ) {
+		if ( this.userEndpoint === null ) {
+			this.getDebug(  ).log('_getUserEndpoint');			
+			if ( !this.getIDP(  )[Login.USER_ENDPOINT].nil(  ) ) {
+				this.userEndpoint = this._getUserValue(Login.USER_ENDPOINT);
+			} else {
+				throw 'Missing User Endpoint';
+			}
+		}
+		return this.userEndpoint;
+	},
+	
+	_getUserEndpointParameters : function (  ) {
+		if ( this.userEndpointParameters === null ) {
+			this.getDebug(  ).log('_getUserEndpointParameters');			
+			if ( !this.getIDP(  )[Login.USER_ENDPOINT_PARAMS].nil(  ) ) {
+				this.userEndpointParameters = this._getUserValue(Login.USER_ENDPOINT_PARAMS);
+			}
+		}
+		return this.userEndpointParameters;
+	},
+	
+	_getUserRequestBody : function (  ) {
+		if ( this.userRequestBody === null ) {
+			this.getDebug(  ).log('_getUserRequestBody');
+			if ( !this.getIDP(  )[Login.USER_BODY_PARAMS].nil(  ) ) {
+				this.userRequestBody = this._getUserValue(Login.USER_BODY_PARAMS);
+			}
+		}
+		return this.userRequestBody;
+	},
+	
+	_getUserHeaders : function (  ) {
+		if ( this.userHeaders === null ) {
+			this.getDebug(  ).log('_getUserRequestBody');
+			if ( !this.getIDP(  )[Login.USER_HEADERS].nil(  ) ) {
+				var jsonStr = this._getUserValue(Login.USER_HEADERS);
+				this.userHeaders = JSON.parse(jsonStr);
+			}
+		}
+		return this.userHeaders;
+	},
+	
+	_getUserValue : function (templateFieldName) {
+		var templateValue = new Util.TemplateValue(  );
+		templateValue.setIDP(this.getIDP(  ));
+		templateValue.setTemplateFieldName(templateFieldName);
+		templateValue.setScriptTableName('x_snc_gos_script_user');
+		templateValue.setScriptSysId(this._getValue('user_script'));
+		templateValue.setArguments({
+			current : this.getIDP(  ),
+			request : this.getRequest(  ),
+			token   : this._getToken(  )
+		});
+		var readyValue = templateValue.getReadyValue(  );
+		this.getDebug(  ).log(templateValue.getDebug(  ).getMessages(  ));
+		if ( gs.nil(readyValue) ) {
+			throw 'Failed to get value for ' + templateFieldName;
+		}
+		return readyValue;
+	},
+	
+	type : 'Login'
+});]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-22 16:48:31</sys_created_on>
+        <sys_id>35c35300dbbce3009f7d73568c961999</sys_id>
+        <sys_mod_count>106</sys_mod_count>
+        <sys_name>Login</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_script_include_35c35300dbbce3009f7d73568c961999</sys_update_name>
+        <sys_updated_by>kenny.caldwell@linium.com</sys_updated_by>
+        <sys_updated_on>2018-10-08 13:32:38</sys_updated_on>
+    </sys_script_include>
+</record_update>

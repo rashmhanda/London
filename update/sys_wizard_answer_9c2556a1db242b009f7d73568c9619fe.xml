@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_wizard_answer">
+    <sys_wizard_answer action="INSERT_OR_UPDATE">
+        <active>false</active>
+        <answer>OAuth</answer>
+        <button_label/>
+        <dependent_value/>
+        <element/>
+        <name>OAuth Properties</name>
+        <next_question/>
+        <order>100</order>
+        <payload_name/>
+        <question display_value="Identity Providers" name="Identity Providers">8cffab131b121100227e5581be07133d</question>
+        <roles/>
+        <script/>
+        <sys_class_name>sys_wizard_answer</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-14 17:50:00</sys_created_on>
+        <sys_id>9c2556a1db242b009f7d73568c9619fe</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>OAuth Properties</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_wizard_answer_9c2556a1db242b009f7d73568c9619fe</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-26 14:28:26</sys_updated_on>
+        <table/>
+        <target_url>x_snc_gos_oauth_properties.do</target_url>
+        <type>1</type>
+    </sys_wizard_answer>
+</record_update>

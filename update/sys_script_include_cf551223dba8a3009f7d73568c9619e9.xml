@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_snc_gos.Util</api_name>
+        <client_callable>false</client_callable>
+        <description>General OAuth SSO Utility</description>
+        <name>Util</name>
+        <script><![CDATA[/**
+ * General OAuth SSO Utility
+ *
+ * @author SERVICE-NOW.COM\walter.brame
+ */
+var Util = Class.create();
+
+Util.TemplateValue = function (  ) {
+	this.idp               = null;
+	this.templateFieldName = null;
+	this.scriptTableName   = null;
+	this.scriptSysId       = null;
+	this.args              = null;
+	this.template          = null;
+	
+	this.setIDP = function (idp) {
+		this.idp = idp;
+	};
+	
+	this.setTemplateFieldName = function (templateFieldName) {
+		this.templateFieldName = templateFieldName;
+	};
+		
+	this.setScriptTableName = function (scriptTableName) {
+		this.scriptTableName = scriptTableName;
+	};
+	
+	this.setScriptSysId = function (scriptSysId) {
+		this.scriptSysId = scriptSysId;
+	};
+	
+	this.setArguments = function (args) {
+		this.args = args;
+	};
+	
+	this.getReadyValue = function () {
+		var ret = null;
+		
+		if ( !gs.nil(this.idp) && !gs.nil(this.templateFieldName) ) {
+		
+			this.template = new Template(  );
+			this.template.setRecord(this.idp);
+			this.template.setTemplateField(this.templateFieldName);
+
+			var properties = this.template.getProperties(  );
+
+			if ( !gs.nil(this.scriptTableName) && !gs.nil(this.scriptSysId)) {
+				
+				var script = properties.getScript(  );
+				script.setTable(this.scriptTableName);
+				script.setQuery('sys_id=' + this.scriptSysId);
+				
+				if ( !gs.nil(this.args) ) {
+					script.setArguments(this.args);
+				}
+			}
+			
+			var readyValue = this.template.getReadyValue(  );
+
+			if ( !gs.nil(readyValue) ) {
+				ret = readyValue;
+			}
+		}
+		
+		return ret;
+	};
+	
+	this.getDebug = function (  ) {
+		return this.template.getDebug(  );
+	};
+};
+
+/**
+* 
+* Returns a value from a dot notation object Reference.
+* 
+* @param obj {Object Object}
+*                    E.g. incident GlideRecord
+* @param str {String} 
+*                    dot notation string value
+*                    E.g. caller_id.name
+*
+* @returns   {String} 
+*                    that is the final value from the reference
+*/
+Util.getDotWalkValue = function(obj, str) {
+	var refs = str.split('.');
+	for (var x = 0; x < refs.length; x++) {
+		try {
+			if (obj[refs[x]] != null && obj[refs[x]] != undefined)
+				obj = obj[refs[x]];
+			else
+				throw 'WARNING: "' + refs[x] + '" is not a valid field in path "' + str + '"';
+		} catch (e) {
+			// 2018-10-05 ToDo - Fix Error
+			// Commented out because this caused an error when the object did not exist
+			// Error Recieved when looking for 'externalId' in 'Login' Script Include
+			// Error form log "Login: getUserName.Exception: TypeError: Cannot find function getDebug in object function () {...}."
+			// this.getDebug(  ).log(e);
+			obj = null;
+			break;
+		}
+	}
+
+	return obj;
+};
+
+/**
+ * This will return a username to log in
+ *
+ * @param code "String"
+ *                     Passed to ServiceNow via a redirect after the user logs in at the authentication provider
+ * @returns "String"
+ *                     The username
+ */
+Util.login = function (code) {
+    var debug = new Debug("login");
+    debug.log("The auth code received = " + code);
+    var ret = null;
+    try {
+        var token = Util.getOAuthToken(code, debug);
+        if (!gs.nil(token)) {
+            var userName = Util.getUserName(token, debug);
+            if (!gs.nil(userName)) {
+                debug.log("Logging in user: " + userName);
+                ret = userName;
+            } else {
+                debug.log("login failed");
+            }
+        } else {
+            debug.log("No token was aquired");
+        }
+    } catch (e) {
+        debug.log(e);
+    } finally {
+        debug.write();
+    }
+    return ret;
+};
+
+/**
+ * This will make a HTTP call to the oauth token service to aquire a token
+ *
+ * @param code "String"
+ *                     Passed to ServiceNow via a redirect after the user logs in at the authentication provider
+ * @param debug {Object Object}
+*                     Object instance of the debug wrapper
+* @returns "String"
+*                     The token
+*/
+Util.getOAuthToken = function (code, debug) {
+    debug.log("getOAuthToken");
+    var ret = null;
+	
+    var endpoint = gs.getProperty("x_snc_gos.access.token.endpoint");
+    var username = gs.getProperty("x_snc_gos.access.token.request.client_id");
+    var password = gs.getProperty("x_snc_gos.access.token.request.client_secret");
+    var requestBody = Util.getTokenRequestBody(code, debug);
+    
+	var request = new sn_ws.RESTMessageV2();
+    request.setEndpoint(endpoint);
+    request.setHttpMethod("POST");
+    request.setRequestHeader("Accept", "application/json");
+    request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    request.setBasicAuth(username, password); // "Basic client_id:secret(base 64 encoded)"
+    request.setRequestBody(requestBody);
+    
+	var response = request.execute();
+    var responseBody = response.getBody();
+    var httpStatus = response.getStatusCode();
+    
+	debug.log("HTTP Status = " + httpStatus); // E.g. 200 for success or 401 for unauthorized
+    var json = new global.JSON();
+    debug.log("Token Response = " + responseBody);
+    var responseObj = json.decode(responseBody);
+    var token = responseObj.access_token;
+    if (!gs.nil(token)) {
+        ret = token;
+    }
+    return ret;
+};
+
+/**
+* This will make a HTTP call to the employee information service to aquire information about the user
+*
+* @param token "String"
+*                     Received by making a call to the oauth token service
+* @param debug {Object Object}
+*                     Object instance of the debug wrapper
+* @returns "String"
+*                     The username
+*/
+Util.getUserName = function (token, debug) {
+    debug.log("getUserName");
+    var ret = null;
+    var endpoint = gs.getProperty("x_snc_gos.user.information.endpoint");
+
+    var request = new sn_ws.RESTMessageV2();
+    request.setEndpoint(endpoint);
+   
+	// TODO: The method to call a user profile changes by provider so it needs to be configurable
+	request.setHttpMethod("GET");
+	
+	// TODO: May be needed for POST
+	//request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    
+	request.setRequestHeader("Authorization", "Bearer " + token);
+
+    var response = request.execute();
+    var responseBody = response.getBody();
+    var httpStatus = response.getStatusCode();
+    var json = new global.JSON();
+
+    debug.log("User Name Response = " + responseBody);
+
+    var responseObj = json.decode(responseBody);
+    
+	var usernameProperty = gs.getProperty("x_snc_gos.user.information.username_property");
+	
+	// TODO: Needs to support a dot-walk path 
+	var userName = responseObj[usernameProperty];
+    
+	if (!gs.nil(userName)) {
+        
+		var userFieldName = gs.getProperty("x_snc_gos.user.field_name");
+		var user = new GlideRecord('sys_user');
+		user.addQuery(userFieldName, userName);
+		user.query();
+		if (user.next()) {
+			ret = userName;
+		} else {
+			// Log an error if this user does not exist
+			debug.log('No sys_user found for ' + userFieldName + ' = ' + userName);
+		}
+    }
+    return ret;
+};
+
+/**
+* Creates the request body for the oauth token service
+*
+* @param code "String"
+*                     Passed to ServiceNow via a redirect after the user logs in at the authentication provider
+* @param debug {Object Object}
+*                     Object instance of the debug wrapper
+* @returns "String"
+*                     The request body
+*/
+Util.getTokenRequestBody = function (code, debug) {
+    debug.log("getTokenRequestBody");
+    var ret = "";
+    
+	var template = gs.getProperty("x_snc_gos.access.token.request");
+	
+	// User defined variables
+	var propertyPrefix = 'x_snc_gos.access.token.request.';
+	var propertiesGR = new GlideRecord('sys_properties');
+	propertiesGR.addQuery('name', 'STARTSWITH', propertyPrefix);
+	propertiesGR.query();
+	while (propertiesGR.next()) {
+		var propertyName = propertiesGR.getValue('name') + '';
+		var propertyValue = propertiesGR.getValue('value') + '';
+		var variableName = '${' + propertyName.replace(propertyPrefix, '') + '}';
+		debug.log('Variable: ' + variableName);
+		if (template.indexOf(variableName) != -1) {
+			template = template.replace(variableName, propertyValue);
+			
+		}
+	}
+	
+	// Global variables
+	var globals = {
+		'${instance_name}' : gs.getProperty("instance_name"),
+		'${code}' : code,
+	};	
+	for ( var variable in globals ) {
+		if (globals.hasOwnProperty(variable)) {
+			if (template.indexOf(variable) != -1) {
+				template = template.replace(variable, globals[variable]);
+			}
+		}
+	}
+	
+	ret = template;
+    debug.log("Token Request Body = " + ret);
+    return ret;
+};
+
+/**
+* Creates the endpoint for the login page at the authentication provider
+*
+* @returns "String"
+*                     The endpoint
+*/
+Util.getAuthCodeRedirectUrl = function () {
+    var debug = new Debug("getAuthCodeRedirectUrl");
+	
+    var ret = "failed_authentication";
+	
+    try {
+		
+		var template = gs.getProperty("x_snc_gos.auth.code.endpoint");
+		debug.log('template = ' + template);
+	
+		// User defined variables
+		var propertyPrefix = 'x_snc_gos.auth.code.';
+		var propertiesGR = new GlideRecord('sys_properties');
+		propertiesGR.addQuery('name', 'STARTSWITH', propertyPrefix);
+		propertiesGR.query();
+		while (propertiesGR.next()) {
+			var propertyName = propertiesGR.getValue('name') + '';
+			var propertyValue = propertiesGR.getValue('value') + '';
+			var variableName = '${' + propertyName.replace(propertyPrefix, '') + '}';
+
+			debug.log('Variable: ' + variableName + ' = ' + propertyValue);
+			
+			if (template.indexOf(variableName) != -1) {
+				template = template.replace(variableName, propertyValue);
+
+			}
+		}
+
+		// Global variables
+		var globals = {
+			'${instance_name}' : gs.getProperty("instance_name")
+		};	
+		for ( var variable in globals ) {
+			if (globals.hasOwnProperty(variable)) {
+				if (template.indexOf(variable) != -1) {
+					template = template.replace(variable, globals[variable]);
+				}
+			}
+		}
+		
+		// TODO: @state needs to be a GUID that is stored in the session to inspect
+		// when receiving a authorization code to make sure its the one we asked for.
+		ret = template + '&state=12345';
+
+		debug.log("Auth Code Redirect URL = " + ret);
+		
+		if ( gs.nil(ret) ) {
+			// 
+			throw 'Something is wrong the URL is missing';
+		}		
+		
+    } catch (e) {
+        debug.log(e);
+    } finally {
+        debug.write();
+    }
+	return ret;
+};
+
+// TODO
+/**
+ * Perform logout operation.
+ * @param userName funcional
+ */
+Util.logout = function (userName) {
+    var debug = new Debug("logout");
+    try {
+        var accessToken = this.getAccessTokenByUserName(userName, debug);
+        var succeed = this.revokeAccessToken(accessToken, debug);
+
+        if (succeed) {
+            this.deleteUserToken(userName, debug);
+        }
+    } catch (e) {
+        debug.log(e);
+    } finally {
+        debug.write();
+    }
+};
+
+// TODO
+/**
+ * Get user access token by it's user name (funcional)
+ * @param userName funcional
+ * @param debug debugger object
+ */
+Util.getAccessTokenByUserName = function (userName, debug) {
+    debug.log("getAccessTokenByUserName");
+    var userToken = new GlideRecord(gs.getProperty('xxx'));
+    var accessToken = null;
+
+    if (userToken.get('u_user_id', userName)) {
+        accessToken = userToken.u_access_token;
+    }
+
+    debug.log("Access token retrieved: " + accessToken);
+
+    return accessToken;
+};
+
+// TODO
+/**
+ * Revoke the user access token at the authentication provider.
+ * @param accessToken access token
+ * @param debug debugger object
+ */
+Util.revokeAccessToken = function (accessToken, debug) {
+    debug.log("revokeAccessToken");
+    var tokenRevoked = false;
+    try {
+        var logoutEndpoint = gs.getProperty('xxx');
+        var clientId = gs.getProperty('xxx');
+        var clientSecret = gs.getProperty('xxx');
+        var host = gs.getProperty('instance_name') + '.service-now.com';
+        var requestBody = 'xxx';
+
+        var request = new sn_ws.RESTMessageV2();
+        request.setEndpoint(logoutEndpoint);
+        request.setBasicAuth(clientId, clientSecret);
+        request.setHttpMethod('POST');
+        request.setRequestHeader('Accept', 'application/json');
+        request.setRequestHeader('Host', host);
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        request.setRequestBody(requestBody);
+
+        var response = request.execute();
+        var httpStatus = response.getStatusCode();
+
+        debug.log("HTTP Response Status: " + httpStatus);
+
+        tokenRevoked = (httpStatus === 200); // 200 = Success
+    } catch (error) {
+        debug.log("revokeAccessToken error: " + error);
+    }
+
+    return tokenRevoked;
+};
+
+// TODO
+/**
+ * Delete user token from database.
+ * @param userName funcional
+ * @param debug debugger object
+ */
+Util.deleteUserToken = function (userName, debug) {
+    debug.log("deleteUserToken");
+    var userToken = new GlideRecord(gs.getProperty('xxx'));
+    userToken.addQuery('u_user_id', userName);
+    userToken.query();
+    while (userToken.next()) {
+        debug.log("deleting user token record.");
+        userToken.deleteRecord();
+    }
+};
+
+// TODO
+/**
+ * Insert or update a user token in database.
+ * @param userName funcional
+ * @param accessToken access token
+ */
+Util.upsertUserToken = function (userName, accessToken) {
+    var userToken = new GlideRecord(gs.getProperty('xxx'));
+
+    if (userToken.get("u_user_id", userName)) { // Update
+        userToken.u_access_token = accessToken;
+        userToken.update();
+
+    } else { // Insert
+        userToken.u_user_id = userName;
+        userToken.u_access_token = accessToken;
+        userToken.insert();
+    }
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-20 23:01:36</sys_created_on>
+        <sys_id>cf551223dba8a3009f7d73568c9619e9</sys_id>
+        <sys_mod_count>46</sys_mod_count>
+        <sys_name>Util</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_script_include_cf551223dba8a3009f7d73568c9619e9</sys_update_name>
+        <sys_updated_by>kenny.caldwell@linium.com</sys_updated_by>
+        <sys_updated_on>2018-10-05 18:26:41</sys_updated_on>
+    </sys_script_include>
+</record_update>

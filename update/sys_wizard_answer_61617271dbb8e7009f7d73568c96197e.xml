@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_wizard_answer">
+    <sys_wizard_answer action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <answer>User Request API</answer>
+        <button_label/>
+        <dependent_value/>
+        <element/>
+        <name>User Request API</name>
+        <next_question/>
+        <order>310</order>
+        <payload_name/>
+        <question display_value="API script" name="API script">6d5c6e3ddb78e7009f7d73568c9619f0</question>
+        <roles/>
+        <script/>
+        <sys_class_name>sys_wizard_answer</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-28 00:47:40</sys_created_on>
+        <sys_id>61617271dbb8e7009f7d73568c96197e</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>User Request API</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_wizard_answer_61617271dbb8e7009f7d73568c96197e</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-28 00:56:30</sys_updated_on>
+        <table/>
+        <target_url>x_snc_gos_user_request_api.do</target_url>
+        <type>1</type>
+    </sys_wizard_answer>
+</record_update>

@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_snc_gos.Script</api_name>
+        <client_callable>false</client_callable>
+        <description>Provides API that can run scripts stored in data tables.</description>
+        <name>Script</name>
+        <script><![CDATA[/*
+* Provides API that can run scripts stored in data tables.
+*
+* @author SERVICE-NOW.COM\walter.brame
+*/
+var Script = Class.create();
+Script.FIELD_NAME   = 'name';
+Script.FIELD_ACTIVE = 'active';
+Script.FIELD_SCRIPT = 'script';
+Script.FIELD_ORDER  = 'order';
+Script.Exception = function (name, message) {
+	this.name    = name;
+	this.message = message;
+};
+Script.prototype = Object.extendsObject(Base, {
+    initialize: function (  ) {
+		this.query         = null;
+		this.table         = null;
+		this.throwErrors   = null;
+		this.scriptQuery   = null;
+		this.args          = null;
+		this.script        = null;
+		this.answer        = null;
+		this.scriptIds     = null;
+		this.trueScriptIds = null;
+		this.fieldActive   = null;
+		this.fieldScript   = null;
+		this.fieldOrder    = null;
+		this.fieldName     = null;
+		
+		Base.prototype.initialize.apply(this, arguments);
+    },
+	
+	runScripts : function (  ) {
+		this.getDebug(  ).log('runScripts');
+		if ( this.getScript(  ) != null ) {
+			var index = 0;
+			while ( this.getScript(  ).next(  ) ) {
+				this.getDebug(  ).log('SCRIPT ROW# ' + index);
+				
+				// Collect the script Id for any script that ran
+				var id = this.getScript(  ).getUniqueValue(  ) + '';
+				this.setScriptId(id);
+				
+				var answer = this._runScript(  );					
+				if ( answer === true ) {
+					// Collect the script Id for any script that returns "true"
+					this.setTrueScriptId(id);
+				}
+				index += 1;
+			}
+		} else {
+			this.getDebug(  ).log('No scripts');
+		}
+	},
+	
+	_runScript : function () {
+		var ret = null;		
+		this.getDebug(  ).log('Script Name: ' + this._getScriptName(  ));
+		if (!this._isActive(  )) {
+			this.getDebug(  ).log('Script is inactive, will not run');
+		} else if ( this._isEmpty(  ) ) {
+			this.getDebug(  ).log('Empty script, will not run');
+		} else {
+			this.getDebug(  ).log('Running Script');
+			try {
+				ret = this._run(  );
+			} catch (e) {		
+				this._processExceptions(e, this.getScript(  ));
+			} finally {
+			}
+		}
+		return ret;
+	},
+	
+	_isEmpty : function (  ) {
+		var ret = false;
+		if ( gs.nil(this.getScript(  ).getValue(this.getFieldScript(  ))) ) {
+			ret = true;
+		}
+		return ret;
+	},
+	
+	_isActive : function (  ) {
+		var ret = false;
+		if ( this.getScript(  ).getValue(this.getFieldActive(  )) == true ) {
+			ret = true;
+		}
+		return ret;
+	},
+	
+	_getScriptName : function (  ) {
+		return this.getScript(  ).getValue(this.getFieldName(  ));
+	},
+	
+	_run : function () {
+		var evaluator = new GlideScopedEvaluator(  );
+		
+		for ( var name in this.getArguments(  ) ) {
+			if ( this.getArguments(  ).hasOwnProperty(name)) {
+				this.getDebug(  ).log('Argument: ' + name);
+				evaluator.putVariable(name, this.getArguments(  )[name]);
+			}
+		}
+		
+		var result = evaluator.evaluateScript(this.getScript(  ), this.getFieldScript(  ), null);
+		return result;
+	},
+	
+	_processExceptions : function (e) {
+		// The caller would have to ask for this and plan to catch it
+		if ( this.getThrowErrors(  ) ) {
+			throw new Script.Exception(this._getScriptName(  ), e);
+		} else {						
+			// Just add to debugger and allow the caller to continue.
+			// E.g. syntax typo should just be skipped
+			this.getDebug(  ).log(e);
+		}
+	},	
+	
+	setQuery : function (query) {
+		this.query = query;
+	},
+	
+	setTable : function (table) {
+		this.table = table;
+	},
+	
+	setThrowErrors : function (throwErrors) {
+		this.throwErrors = throwErrors;
+	},
+	
+	setArguments : function (args) {
+		this.args = args;
+	},
+	
+	setFieldActive : function (fieldActive) {
+		this.fieldActive = fieldActive;
+	},
+	
+	setFieldScript : function (fieldScript) {
+		this.fieldScript = fieldScript;
+	},
+	
+	setFieldOrder : function (fieldOrder) {
+		this.fieldOrder = fieldOrder;
+	},
+	
+	setFieldName : function (fieldName) {
+		this.fieldName = fieldName;
+	},
+	
+	addArgument : function (arg, value) {
+		this.getArguments(  )[arg] = value;
+	},
+	
+	getQuery : function (  ) {
+		return this.query;
+	},
+	
+	getTable : function (  ) {
+		return this.table;
+	},
+	
+	getThrowErrors : function (  ) {
+		return this.throwErrors;
+	},
+	
+	getArguments : function (  ) {
+		if ( this.args === null ) {
+			this.args = {  };
+		}
+		this.args.debug = this.getDebug(  );
+		return this.args;
+	},
+	
+	getFieldActive : function (  ) {
+		if ( this.fieldActive === null ) {
+			this.fieldActive = Script.FIELD_ACTIVE;
+		}
+		return this.fieldActive;
+	},
+	
+	getFieldScript : function (  ) {
+		if ( this.fieldScript === null ) {
+			this.fieldScript = Script.FIELD_SCRIPT;
+		}
+		return this.fieldScript;
+	},
+	
+	getFieldOrder : function (  ) {
+		if ( this.fieldOrder === null ) {
+			this.fieldOrder = Script.FIELD_ORDER;
+		}
+		return this.fieldOrder;
+	},
+	
+	getFieldName: function (  ) {
+		if ( this.fieldName === null ) {
+			this.fieldName = Script.FIELD_NAME;
+		}
+		return this.fieldName;
+	},
+	
+	/*
+	* Return a list of all sys_id(s) for the scripts that ran
+ 	*/
+	getScriptIds : function (  ) {
+		if ( this.scriptIds === null ) {
+			this.scriptIds = [  ];
+		}
+		return this.scriptIds;
+	},
+	
+	setScriptId : function (scriptSysId) {
+		this.getScriptIds(  ).push(scriptSysId);
+	},
+	
+	/*
+	* Return a list of all sys_id(s) for the scripts that return "true"
+ 	*/
+	getTrueScriptIds : function (  ) {
+		if ( this.trueScriptIds === null ) {
+			this.trueScriptIds = [  ];
+		}
+		return this.trueScriptIds;
+	},
+	
+	setTrueScriptId : function (scriptSysId) {
+		this.getTrueScriptIds(  ).push(scriptSysId);
+	},
+	
+	hasScriptsReturningTrue : function (  ) {
+		return (this.getTrueScriptIds(  ).length != 0);
+	},
+	
+	isOneSciptReturningTrue : function (  ) {
+		return (this.getTrueScriptIds(  ).length == 1);
+	},
+	
+	getAnswer : function (  ) {
+		if ( this.isOneSciptReturningTrue(  ) ) {
+			// The "answer" will be set to the one script that returned true
+			var sysId = this.getTrueScriptIds(  )[0];
+			this.answer = new GlideRecord(this.getTable(  ));
+			this.answer.get(sysId);
+		}
+		return this.answer;
+	},
+	
+	setAnswer : function (answer) {
+		this.answer = answer;
+	},
+	
+	getScript : function (  ) {
+		if ( this.script === null ) {
+			this.script = this._getScriptQuery(  );
+		}
+		return this.script;
+	},
+	
+	setScript : function (script) {
+		this.script = script;
+	},
+	
+	_getScriptQuery : function (  ) {
+		if ( this.scriptQuery === null ) {
+			if ( !gs.nil(this.getTable(  )) && !gs.nil(this.getQuery(  ))) {
+				var scriptGR = new GlideRecord(this.getTable(  ));
+				scriptGR.addEncodedQuery(this.getQuery(  ));
+				
+				if ( !gs.nil(this.getFieldOrder(  )) ) {
+					scriptGR.orderBy(this.getFieldOrder(  ));
+				}
+				
+				scriptGR.query();
+				if ( scriptGR.hasNext(  ) ) {
+					this.scriptQuery = scriptGR;
+				}
+			}
+		}
+		return this.scriptQuery;
+	},
+	
+    type: 'Script'
+});]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-22 17:28:38</sys_created_on>
+        <sys_id>61fcd380dbbce3009f7d73568c961917</sys_id>
+        <sys_mod_count>13</sys_mod_count>
+        <sys_name>Script</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_script_include_61fcd380dbbce3009f7d73568c961917</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-10-01 16:14:35</sys_updated_on>
+    </sys_script_include>
+</record_update>

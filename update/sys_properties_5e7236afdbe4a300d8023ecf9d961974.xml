@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description>The client_id for the token request.</description>
+        <ignore_cache>false</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_snc_gos.access.token.request.client_id</name>
+        <read_roles/>
+        <suffix>access.token.request.client_id</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-21 01:06:10</sys_created_on>
+        <sys_id>5e7236afdbe4a300d8023ecf9d961974</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_name>x_snc_gos.access.token.request.client_id</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_properties_5e7236afdbe4a300d8023ecf9d961974</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-21 04:47:55</sys_updated_on>
+        <type>string</type>
+        <value>c34e941a-edcb-4611-8c5b-ff34b9735949</value>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=5e7236afdbe4a300d8023ecf9d961974"/>
+</record_update>

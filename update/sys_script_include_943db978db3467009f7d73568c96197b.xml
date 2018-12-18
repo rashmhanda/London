@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_snc_gos.Template</api_name>
+        <client_callable>false</client_callable>
+        <description>Provides access to a stored template with variables and performs variable substitution.</description>
+        <name>Template</name>
+        <script><![CDATA[/**
+* Provides access to a stored template with variables and performs variable substitution.
+*
+* @author SERVICE-NOW.COM\walter.brame
+*/
+var Template = Class.create(  );
+Template.prototype = Object.extendsObject( Base, {
+	initialize: function (  ) {
+		this.templateTable  = null;
+		this.templateQuery  = null;
+		this.templateField  = null;
+		this.template       = null;
+		this.readyValue     = null;
+		this.properties     = null;
+		
+		Base.prototype.initialize.apply(this, arguments);
+	},
+	
+	getTemplateQuery : function (  ) {
+		return this.templateQuery;
+	},
+	
+	setTemplateQuery : function (templateQuery) {
+		this.templateQuery = templateQuery;
+	},
+	
+	getTemplateTable : function (  ) {
+		return this.templateTable;
+	},
+	
+	setTemplateTable : function (templateTable) {
+		this.templateTable = templateTable;
+	},
+	
+	/*
+	* Gets the record that has the template.
+	*
+	* @returns {Object GlideRecord}
+	*                     The record that has the HTML template.
+	*/
+	getRecord : function (  ) {
+		if ( this.record === null ) {
+			if ( this.getTemplateTable(  ) !== null && this.getTemplateQuery(  ) != null ) {
+				var template = new GlideRecord(this.getTemplateTable(  ));
+				template.addEncodedQuery(this.getTemplateQuery(  ));
+				template.query(  );
+				if ( template.next(  ) ) {
+					this.record = template;
+					this.getDebug(  ).log('Using template: ' + template.getDisplayValue(  ));
+				} else {
+					this.getDebug(  ).log('No template record found');
+				}
+			}
+		}
+		return this.record;
+	},
+	
+	getTemplateField : function (  ) {
+		return this.templateField;
+	},
+	
+	setTemplateField : function (templateField) {
+		this.templateField = templateField;
+	},
+	
+	/*
+	* Gets the the template field with variables from the template record.
+	*
+	* @returns {Object "String"}
+	*                     The value from the template field with variables.
+	*/
+	getTemplate : function (  ) {
+		if ( this.template === null ) {
+			if ( !gs.nil(this.getRecord(  )) && !gs.nil(this.getTemplateField(  )) ) {
+					this.getDebug(  ).log('Using template from field: ' + this.getTemplateField(  ));
+				if ( !this.getRecord(  )[this.getTemplateField(  )].nil(  ) ) {
+					this.template = this.getRecord(  ).getValue(this.getTemplateField(  )) + '';
+					this.getDebug(  ).log('Template: ' + this.template);
+				} else {
+					this.getDebug(  ).log('No template found');
+				}
+			}
+		}
+		return this.template;
+	},
+	
+	setTemplate : function(template) {
+		this.template = template;
+	},
+	
+	/*
+	* Gets the final value that is ready to be used.
+	* Replaces variables found in the template with the actual values.
+	*
+	* @returns {Object "String"}
+	*                     The final value ready to use
+	*/
+	getReadyValue : function (  ) {
+		if ( this.readyValue === null ) {
+			try {
+				if ( this.getTemplate(  ) !== null ) {
+					
+					var properties = this._getProperties(  );
+					if ( properties !== null ) {
+						
+						this.getDebug(  ).log('Processing variable substitution against template');
+						this.readyValue = this._substituteVariables(properties) + '';
+					
+					} else {
+						this.getDebug(  ).log('No changes made to the template');
+						this.readyValue = this.getTemplate(  );
+					}
+					
+					this.formatSpecialCharactersCallback(this.readyValue, this.getDebug(  ));
+					
+					this.getDebug(  ).log('Returning Ready Value: ' + this.readyValue);
+					
+				} else {
+					this.getDebug(  ).log('Unable to get the template');
+				}
+			} catch (e) {
+				this.getDebug(  ).log(e);
+			} finally {
+			}			
+		}
+		return this.readyValue;
+	},
+	
+	setReadyValue : function (readyValue) {
+		this.readyValue = readyValue;
+	},
+	
+	formatSpecialCharactersCallback : function (readyValue, debug) {
+		// E.g.
+		//readyValue = readyValue.replace(/&nbsp;/g, ' ');
+		//readyValue = readyValue.replace(/&/g, '$[AMP]');
+	},
+	
+	setFormatSpecialCharactersCallback : function (func) {
+		this.formatSpecialCharactersCallback = func;
+	},
+	
+	/**
+	 * Does the substitution of ${name} variables
+	 *
+	 * @param s {Object ""}
+	 *                     The string with variables
+	 * @param properties {Object Object}
+	 *                      Map of properties to values
+	 * @returns {Object ""}
+	 *                     The string with final values
+	 */
+	_substituteVariables : function (properties) {
+		var unexpandedVars = true;
+		var s = this.getTemplate(  );
+		do {
+			var i = s.indexOf("${");
+			if ( i > -1 && i < s.length - 1 && s.substring(i + 1, i + 2) == "{" ) {
+				var start = i;
+				var end = i + 2 + s.substring(i + 2).indexOf("}");
+				var variable = s.substring(start + 2, end);
+				if ( variable != null && variable.length > 0 ) {
+					variable = this._resolveVar(variable, properties);
+				}
+				s = s.substring(0, start) + variable + s.substring(end + 1);
+				s.charAt(0);
+			} else {
+				unexpandedVars = false;
+			}
+		} while (unexpandedVars);
+		
+		return s;
+	},
+	
+	/**
+	 * Variables are loaded from properties map
+	 *
+	 * @param variable {Object ""}
+	 *                      Name of variable to be substituted by a property
+	 * @param properties {Object Object}
+	 *                      Map of properties to values
+	 * @returns {Object ""}
+	 */
+	_resolveVar : function (variable, properties) {		
+		if ( variable != null && !gs.nil(properties) ) {
+			var v = properties[variable];
+			if ( v != null )
+				return v;
+		}
+
+		return "";
+	},
+	
+	_getProperties : function (  ) {
+		var ret = null;
+		if ( this.getProperties(  ) != null ) {
+			ret = this.getProperties(  ).getProperties(  );
+			
+			this.getDebug(  ).log(this.getProperties(  ).getDebug(  ).getMessages(  ));
+		}
+		return ret;
+	},
+	
+	/*
+	* Collect a list of all variables found in the template and dot-walk the
+	* record, or run scripts to get the values for the variables.
+	*
+	* @returns {Object Object}
+	*            Map of properties to values
+	*/
+	getProperties : function (  ) {
+		if ( this.properties === null ) {
+			if ( this.getRecord(  ) !== null && this.getTemplate(  ) !== null ) {
+				this.properties = new Properties({
+					record       : this.getRecord(  ),
+					template     : this.getTemplate(  )
+				});
+			} else {
+				this.getDebug(  ).log('Not using properties');
+			}	
+		}
+		return this.properties;
+	},
+
+	type: 'Template'
+});]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-24 18:26:48</sys_created_on>
+        <sys_id>943db978db3467009f7d73568c96197b</sys_id>
+        <sys_mod_count>15</sys_mod_count>
+        <sys_name>Template</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_script_include_943db978db3467009f7d73568c96197b</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-09-25 14:30:30</sys_updated_on>
+    </sys_script_include>
+</record_update>

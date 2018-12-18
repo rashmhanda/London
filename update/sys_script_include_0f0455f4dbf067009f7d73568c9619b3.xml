@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_snc_gos.API</api_name>
+        <client_callable>false</client_callable>
+        <description>All context for scripts the user can run are defined here, to send a request, or receive a response.</description>
+        <name>API</name>
+        <script><![CDATA[/*
+* All context for scripts the user can run are defined here,
+* to send a request, or receive a response.
+*
+* @author SERVICE-NOW.COM\walter.brame
+*/
+var API = Class.create();
+API.prototype = Object.extendsObject( Base, {
+    initialize: function() {
+		Base.prototype.initialize.apply(this, arguments);
+		
+		this.tokenRequestAPI = null;
+    },
+	
+	setTokenRequestAPI : function(script) {
+		this.tokenRequestAPI = script;
+	},
+	
+	runTokenRequestAPI : function (  ) {
+		if ( this.tokenRequestAPI == null ) {
+			this.tokenRequestAPI = function (  ) {
+				var ret = null;
+				
+				if ( this.getLogin(  ).getIDP(  ) != null ) {	
+					this.getDebug(  ).log('Start Token Request API');	
+					
+					// This will set the variables passed to the script template
+					var args = {
+						current         : this.getLogin(  ).getIDP(  ),
+						inboundRequest  : this.getLogin(  ).getRequest(  ),
+						outboundRequest : this.getLogin(  ).getTokenRequestInstance(  ),
+						scratchpad      : this.getLogin(  ).getScratchpad(  )
+					};
+					
+					var query = this._getScriptQuery('x_snc_gos_script_token_request');
+					
+					ret = this._runScript(query, args);
+					
+					this.getDebug(  ).log('End Token Request API');
+				}
+				return ret;
+			};
+		}
+		this._runAPI(this.tokenRequestAPI);
+	},
+	
+	// This will execute the API function
+	_runAPI : function (func) {
+		var ret = null;
+		try {
+			ret = func.call(this);
+		} catch (e) {
+			this.getDebug(  ).log(e);
+		} finally {
+			this.getLogin(  ).getDebug(  ).log(this.getDebug(  ).getMessages(  ));
+			this.getDebug(  ).clearLog(  );
+		}
+		return ret;
+	},
+	
+	// This will run the scripts defined by the users in the script record
+	_runScript : function (query, args) {
+		var script = new Script(  );
+		script.setTable(query.getTableName(  ));
+		script.setQuery(query.getEncodedQuery(  ));
+		script.setArguments(args);
+		script.runScripts(  );
+		this.getDebug(  ).log(script.getDebug(  ).getMessages(  ));
+		return script;
+	},
+	
+	_getScriptQuery : function (tableName) {
+		var ret = new GlideRecord(tableName);
+		ret.addQuery('idp', this.getLogin(  ).getIDP(  ));
+		this.getDebug(  ).log('Query = ' + ret);
+		return ret;
+	},
+
+    type: 'API'
+});]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>walter.brame</sys_created_by>
+        <sys_created_on>2018-09-24 15:25:59</sys_created_on>
+        <sys_id>0f0455f4dbf067009f7d73568c9619b3</sys_id>
+        <sys_mod_count>6</sys_mod_count>
+        <sys_name>API</sys_name>
+        <sys_package display_value="GOS" source="x_snc_gos">f7e735eddba02b009f7d73568c961971</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="GOS">f7e735eddba02b009f7d73568c961971</sys_scope>
+        <sys_update_name>sys_script_include_0f0455f4dbf067009f7d73568c9619b3</sys_update_name>
+        <sys_updated_by>walter.brame</sys_updated_by>
+        <sys_updated_on>2018-10-01 15:53:18</sys_updated_on>
+    </sys_script_include>
+</record_update>
